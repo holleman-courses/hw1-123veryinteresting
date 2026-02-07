@@ -1,16 +1,15 @@
 
 # TensorFlow and tf.keras
-import tensorflow as tf
-import tensorflow_datasets as tfds
 
-from tensorflow.keras.datasets import cifar10
 
 import tensorflow as tf
-from tensorflow.keras import layers, models, Input, Sequential
+
+import tensorflow.keras
+from keras import layers, models, Input, Sequential
 
 
-from tensorflow.keras.losses import SparseCategoricalCrossentropy
-from sklearn.model_selection import train_test_split
+from keras.losses import SparseCategoricalCrossentropy
+#from sklearn.model_selection import train_test_split
 
 # Helper libraries
 import argparse
@@ -22,10 +21,8 @@ import random as rand
 
 import numpy as np
 
-
-
-
 import os
+import sys
 import time
 import csv
 
@@ -315,7 +312,57 @@ def train_model(model, train_images, train_labels, val_images, val_labels, test_
 
 
 
+def split_train_valid(train_images_full, train_labels_full, valid_size):
+    assert 0 < valid_size < 0.5
 
+    train_images_full = np.asarray(train_images_full)
+    train_labels_full = np.asarray(train_labels_full)
+
+    arr_len = train_images_full.shape[0]
+    assert train_labels_full.shape[0] == arr_len
+
+    val_target = int(valid_size * arr_len)
+    train_target = arr_len - val_target
+
+    print(val_target, train_target)
+
+    img_shape = train_images_full.shape[1:]
+
+    train_images = np.empty((train_target, *img_shape), dtype=train_images_full.dtype)
+    val_images = np.empty((val_target, *img_shape), dtype=train_images_full.dtype)
+
+    train_labels = np.empty((train_target, *train_labels_full.shape[1:]), dtype=train_labels_full.dtype)
+    val_labels = np.empty((val_target, *train_labels_full.shape[1:]), dtype=train_labels_full.dtype)
+
+
+    
+
+    train_i = 0
+    val_i = 0
+
+    for k in range(arr_len):
+        if train_i >= train_target:
+            val_images[val_i] = train_images_full[k]
+            val_labels[val_i] = train_labels_full[k]
+            val_i += 1
+            continue
+
+        if val_i >= val_target:
+            train_images[train_i] = train_images_full[k]
+            train_labels[train_i] = train_labels_full[k]
+            train_i += 1
+            continue
+
+        if rand.random() < valid_size:
+            val_images[val_i] = train_images_full[k]
+            val_labels[val_i] = train_labels_full[k]
+            val_i += 1
+        else:
+            train_images[train_i] = train_images_full[k]
+            train_labels[train_i] = train_labels_full[k]
+            train_i += 1
+
+    return train_images, val_images, train_labels, val_labels
 
 
 
@@ -324,125 +371,137 @@ def train_model(model, train_images, train_labels, val_images, val_labels, test_
 if __name__ == '__main__':
 
 
+    train_model_1 = False
+    train_model_2 = False
+    train_model_3 = False
+
+    train_model_50k = False
+
+    test_model_1 = False
+    test_model_2 = False
+    test_model_3 = False
+
+    test_model_50k = False
+
+    if '--train_model_1' in sys.argv:
+        train_model_1 = True
+
+    if '--train_model_2' in sys.argv:
+        train_model_2 = True
+
+    if '--train_model_3' in sys.argv:
+        train_model_3 = True
+
+    if '--train_model_50k' in sys.argv:
+        train_model_50k = True
+
+    if '--test_model_1' in sys.argv:
+        test_model_1 = True
+
+    if '--test_model_2' in sys.argv:
+        test_model_2 = True
+
+    if '--test_model_3' in sys.argv:
+        test_model_3 = True
+
+    if '--test_model_50k' in sys.argv:
+        test_model_50k = True
+
+    
+
 
   ########################################
   ## Add code here to Load the CIFAR10 data set
 
-  (train_images_full, train_labels_full), (test_images, test_labels) = cifar10.load_data()
+    (train_images_full, train_labels_full), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
 
-  class_names = ['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
+    class_names = ['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
 
-  train_images_full = train_images_full.astype("float32") / 255.0
-  test_images = test_images.astype("float32") / 255.0
+    train_images_full = train_images_full.astype("float32") / 255.0
+    test_images = test_images.astype("float32") / 255.0
 
-  train_images, val_images, train_labels, val_labels = train_test_split(
-      train_images_full,
-      train_labels_full,
-      test_size=0.2,
-      random_state=int(rand.randint(1,99)*np.pi)
-  )
-
-  
-
-  model1 = build_model1()
-  model2 = build_model2()
-  model3 = build_model3()
-
-
-  models = [model1, model2, model3]
-
-
-  for k in range(0, len(models)):
-
-    model = models[k]
-
-    model.summary()
-
-      
-    train_model(
-    model,
-    train_images,
-    train_labels,
-    val_images,
-    val_labels,
-    test_images,
-    test_labels,
-    save_path=f'./model_{k+1}',
-    epochs=NUM_OF_EPOCHS
+    train_images, val_images, train_labels, val_labels = split_train_valid(
+        train_images_full,
+        train_labels_full,
+        valid_size=0.3,
     )
 
-
-
-  model1 = build_model1()
-
-  model1.summary()
-
-  train_model(
-    model,
-    train_images,
-    train_labels,
-    val_images,
-    val_labels,
-    test_images,
-    test_labels,
-    save_path=f'./model_{k+1}',
-    epochs=NUM_OF_EPOCHS
-    )
-
-
-  test_img = np.array(keras.utils.load_img('./test_image.png',grayscale=False,color_mode='rgb',target_size=(32,32)))
-
-  class_vector = model1.predict(truck_img)
-  label_idx = np.argmax(class_vector)
-
-  predicted_class_label = class_names[label_idx]
-
-
-  true_class_label = 'dog'
-
-
-  print(f'\nThe test image belongs to class {true_class_label}.')
-  print(f'Model_{k+1} predicted a class of {predicted_class_label}.')
-  if true_class_label == predicted_class_label:
-    print(f'Model_{k+1} correctly classified the test image.\n')
-
-  else:
-
-    print(f'Model_{k+1} incorrectly classified the test image.\n')
-
-  
-
-
-
-
-
-
-
-
-
-
-  model50k = build_model50k()
-  model50k.compile(optimizer='adam',
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=['accuracy'])
     
-  model50k.summary()
-    
-  train_hist_50k = train_model(model50k, train_images, train_labels,
-                                  val_images, val_labels,
-                                  test_images, test_labels,
-                                  save_path=f'./model_50k',
-                                  epochs=NUM_OF_EPOCHS)
 
-  model50k.save("best_model.h5")
 
+    model1 = build_model1()
+    model2 = build_model2()
+    model3 = build_model3()
+
+    model50k = build_model50k()
+    models = [model1, model2, model3, model50k]
 
 
 
-  
+    trains = [train_model_1, train_model_2, train_model_3, train_model_50k]
+
+    tests = [test_model_1, test_model_2, test_model_3, test_model_50k]
 
 
 
+    for k in range(0, len(models)):
+
+        model = models[k]
+
+        model.compile(optimizer='adam',
+                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                   metrics=['accuracy'])
+
+        model.summary()
 
 
+
+        if trains[k]:
+
+        
+            train_model(
+                model,
+                train_images,
+                train_labels,
+                val_images,
+                val_labels,
+                test_images,
+                test_labels,
+                save_path=f'./model_{k+1}',
+                epochs=NUM_OF_EPOCHS
+            )
+
+            model.save(f'model_{k+1}.h5')
+
+        else:
+            model.load_weights(f'./model_{k+1}.h5')
+
+        if tests[k]:
+
+            test_img = np.array(keras.utils.load_img('./test_image.png',grayscale=False,color_mode='rgb',target_size=(32,32)))
+
+            class_vector = model1.predict(truck_img)
+            label_idx = np.argmax(class_vector)
+
+            predicted_class_label = class_names[label_idx]
+
+            true_class_label = 'dog'
+
+            print(f'\nThe test image belongs to class {true_class_label}.')
+            print(f'Model_{k+1} predicted a class of {predicted_class_label}.')
+
+            if true_class_label == predicted_class_label:
+                print(f'Model_{k+1} correctly classified the test image.\n')
+
+            else:
+                print(f'Model_{k+1} incorrectly classified the test image.\n')
+
+
+    model50k.compile(optimizer='adam',
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=['accuracy'])
+        
+    model50k.summary()
+
+    model50k.save("best_model.h5")
 

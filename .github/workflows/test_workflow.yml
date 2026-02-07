@@ -1,3 +1,19 @@
+name: Autograding Tests
+'on':
+- workflow_dispatch
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: HW1 test
       id: hw1-test
       uses: classroom-resources/autograding-python-grader@v1
@@ -6,19 +22,25 @@
         max-score: 10
         setup-command: 'pip install tensorflow==2.14.1 matplotlib pillow'
 
-    - name: Debug: show grader output JSON
+    - name: Print grader output (includes traceback if present)
       if: always()
       run: |
-        echo "=== steps.hw1-test.outputs.result ==="
+        echo "===== hw1-test.outputs.result ====="
         echo '${{ steps.hw1-test.outputs.result }}'
 
-    - name: Debug: locate and print results.json
+    - name: Print results.json (if generated)
       if: always()
       run: |
-        echo "=== find results.json ==="
-        find . -maxdepth 5 -name "results.json" -print || true
-        echo "=== cat results.json (first 400 lines) ==="
-        for f in $(find . -maxdepth 5 -name "results.json"); do
-          echo "--- $f ---"
-          sed -n '1,400p' "$f"
+        echo "===== Searching for results.json ====="
+        find . -maxdepth 6 -name "results.json" -print || true
+        for f in $(find . -maxdepth 6 -name "results.json"); do
+          echo "===== $f (first 500 lines) ====="
+          sed -n '1,500p' "$f"
         done
+
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        HW1-TEST_RESULTS: "${{steps.hw1-test.outputs.result}}"
+      with:
+        runners: hw1-test

@@ -5,6 +5,7 @@
 import tensorflow as tf
 
 import tensorflow.keras
+import keras
 from keras import layers, models, Input, Sequential
 
 
@@ -30,15 +31,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-global MODEL_COMPARISON_ROWS
-
 
 global NUM_OF_EPOCHS
 NUM_OF_EPOCHS = 30
 
 
 print(f"TensorFlow Version: {tf.__version__}")
-#print(f"Keras Version: {keras.__version__}")
+print(f"Keras Version: {keras.__version__}")
 
 
 input_shape=(32, 32, 3)
@@ -473,10 +472,18 @@ if __name__ == '__main__':
 
             model.save(f'model_{k+1}.h5')
 
-        else:
-            model.load_weights(f'./model_{k+1}.h5')
+
 
         if tests[k]:
+
+            if not trains[k]:
+
+                try:
+                    model.load_weights(f'./model_{k+1}.h5')
+                except e:
+                    print(e)
+
+
 
             test_img = np.array(keras.utils.load_img('./test_image.png',grayscale=False,color_mode='rgb',target_size=(32,32)))
 
@@ -497,11 +504,7 @@ if __name__ == '__main__':
                 print(f'Model_{k+1} incorrectly classified the test image.\n')
 
 
-    model50k.compile(optimizer='adam',
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=['accuracy'])
-        
-    model50k.summary()
 
+    model50k.summary()
     model50k.save("best_model.h5")
 

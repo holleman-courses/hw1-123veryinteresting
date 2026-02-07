@@ -18,8 +18,7 @@ model3 = hw.build_model3()
 
 
 # Load CIFAR 10 dataset
-(train_images, train_labels), (test_images, test_labels) = \
-  tf.keras.datasets.cifar10.load_data()
+(train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
 
 train_labels = train_labels.squeeze()
 test_labels = test_labels.squeeze()

@@ -343,7 +343,7 @@ if __name__ == '__main__':
   )
 
   
-"""
+
   model1 = build_model1()
   model2 = build_model2()
   model3 = build_model3()
@@ -370,14 +370,14 @@ if __name__ == '__main__':
     save_path=f'./model_{k+1}',
     epochs=NUM_OF_EPOCHS
     )
-    """
-"""
+
+
 
   model1 = build_model1()
 
   model1.summary()
 
-    train_model(
+  train_model(
     model,
     train_images,
     train_labels,
@@ -409,7 +409,7 @@ if __name__ == '__main__':
   else:
 
     print(f'Model_{k+1} incorrectly classified the test image.\n')
-"""
+
   
 
 
@@ -418,7 +418,7 @@ if __name__ == '__main__':
 
 
 
-"""
+
 
 
   model50k = build_model50k()
@@ -436,7 +436,7 @@ if __name__ == '__main__':
 
   model50k.save("best_model.h5")
 
-"""
+
 
 
   

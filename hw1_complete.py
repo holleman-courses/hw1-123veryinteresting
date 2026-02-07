@@ -6,7 +6,6 @@ import tensorflow_datasets as tfds
 from tensorflow.keras.datasets import cifar10
 
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import layers, models, Input, Sequential
 
 

@@ -1,0 +1,24 @@
+    - name: HW1 test
+      id: hw1-test
+      uses: classroom-resources/autograding-python-grader@v1
+      with:
+        timeout: 10
+        max-score: 10
+        setup-command: 'pip install tensorflow==2.14.1 matplotlib pillow'
+
+    - name: Debug: show grader output JSON
+      if: always()
+      run: |
+        echo "=== steps.hw1-test.outputs.result ==="
+        echo '${{ steps.hw1-test.outputs.result }}'
+
+    - name: Debug: locate and print results.json
+      if: always()
+      run: |
+        echo "=== find results.json ==="
+        find . -maxdepth 5 -name "results.json" -print || true
+        echo "=== cat results.json (first 400 lines) ==="
+        for f in $(find . -maxdepth 5 -name "results.json"); do
+          echo "--- $f ---"
+          sed -n '1,400p' "$f"
+        done
